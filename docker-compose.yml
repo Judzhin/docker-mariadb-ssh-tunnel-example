@@ -1,0 +1,49 @@
+version: '3.5'
+
+services:
+  ssh-tunnel:
+    image: cagataygurturk/docker-ssh-tunnel:0.0.1
+    container_name: docker-mariadb-ssh-tunnel-${APP_ENV:-dev}
+    volumes:
+      - $HOME/.ssh:/root/ssh:ro
+    environment:
+      TUNNEL_HOST: ${SSH_TUNNEL_HOST:-mysql-tunnel}
+      LOCAL_PORT: ${SSH_LOCAL_PORT:-3306}
+      REMOTE_HOST: ${SSH_REMOTE_HOST:-tunneled-sql.corporate.internal.tld}
+      REMOTE_PORT: ${SSH_REMOTE_PORT:-3306}
+
+#  sshtunnel:
+#    image: nowsci/sshtunnel
+#    container_name: docker-mariadb-sshtunnel-${APP_ENV:-dev}
+#    ports:
+#      - ${SSH_LOCAL_PORT:-3306}:${SSH_LOCAL_PORT:-3306}
+#    volumes:
+#      - $HOME/.ssh:/data/:ro
+#    environment:
+#      TUNNEL_HOST: ${SSH_TUNNEL_HOST:-ssh-tunnel.corporate.tld}
+#      TUNNEL_PORT: ${SSH_TUNNEL_PORT:-22}
+#      REMOTE_HOST: ${SSH_REMOTE_HOST:-tunneled-sql.corporate.internal.tld}
+#      LOCAL_PORT: ${SSH_LOCAL_PORT:-3306}
+#      REMOTE_PORT: ${SSH_REMOTE_PORT:-3306}
+#      KEY: ${SSH_KEY:-/data/id_rsa}
+#
+#    environment:
+#      REMOTE: true
+#      TUNNEL_HOST: host.example.com
+#      TUNNEL_PORT: 22
+#      CONTAINER_HOST: nginx
+#      CONTAINER_PORT: 80
+#      REMOTE_PORT: 8080
+#      KEY: /data/keyfile
+
+  pma:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: docker-mariadb-ssh-tunnel-pma-${APP_ENV:-dev}
+    ports:
+      - ${PMA_HOST_PORT:-33080}:80
+    environment:
+      PMA_HOST: ${PMA_HOST:-ssh-tunnel}
+      PMA_PORT: ${SSH_LOCAL_PORT:-3306}
+    depends_on:
+      - ssh-tunnel
+#      - sshtunnel
